@@ -1,7 +1,7 @@
 import re
 from app.models import GraphState
 
-STATUS_RE = re.compile(r"(?:Then|And)\s+.*status\s+should\s+be\s+(\d{3})", re.IGNORECASE)
+STATUS_RE = re.compile(r"(?:Then|And)\s+(?:status|response\s+status\s+should\s+be)\s+(\d{3})", re.IGNORECASE)
 
 def http_logic_checker(state: GraphState) -> dict:
     if not state.policy:

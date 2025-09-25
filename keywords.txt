@@ -6,34 +6,33 @@
 6. * def <variable_name> = response.<json_path>
 7. * def variable_name = variable_value(“feature_name.feature”) - step to share the variable
 8. * call variable_name - step to call and use the variable
-9. Given endpoint <url>
-10. Given endpoint <variable_name>
-11. Given endpoint <variable_name> “<path>”
-12. Given queryParam <query_param_name> = “<query_param_value>”
-13. GIven queryParam query_param_name = variable_name
-14. And pathParam <path_param_name> = <value>
-15. And header header_name = "header_value"
-16. And header header_name = integer_value
-17. And header header_name = float_value
-18. And header header_name = true|false
-19. And header header-name = "header_value"
-20. And header header-name = integer_value
-21. And header header-name = float_value
-22. And header header-name = true|false
-23. And header Authorization = "authorization_type" token_variable
-24. And header header-name = "string_value" variable_name
-25. And upload file “path/to/your/file”
-26. Given expected read(“Json_file_path”)
-27. And request body :
+9. Given endpoint "<url>"
+10. Given endpoint "<path>"
+11. Given queryParam <query_param_name> = "<query_param_value>"
+12. GIven queryParam query_param_name = variable_name
+13. And pathParam <path_param_name> = <value>
+14. And header header_name = "header_value"
+15. And header header_name = integer_value
+16. And header header_name = float_value
+17. And header header_name = true|false
+18. And header header-name = "header_value"
+19. And header header-name = integer_value
+20. And header header-name = float_value
+21. And header header-name = true|false
+22. And header Authorization = "authorization_type" token_variable
+23. And header header-name = "string_value" variable_name
+24. And upload file “path/to/your/file”
+25. Given expected read(“Json_file_path”)
+26. And request body :
     """
     values
     """
-28. Given request read(Json_file_path)
-30. * set request.<json_path> - This step sets new json values or updates existing json values.
-31. * set request add - This step merges two json parts.
-32. When method <method>
-33. When method <method> path(“<path_parameter>”)
-34. Then def <variable_name> = response.<Json_path>
+27. Given request read(Json_file_path)
+29. * set request.<json_path> - This step sets new json values or updates existing json values.
+30. * set request add - This step merges two json parts.
+31. When method <method>
+32. When method <method> path(“<path_parameter>”)
+33. Then def <variable_name> = response.<Json_path>
 50. Then def <variable_name> = response
 51. * print <string_message> - This step is used to print a message directly without any variable substitution.
 52. * print <string_message> <variable_name> - This step is used to print a message along with the value of a variable.
@@ -79,5 +78,3 @@
 92. * def <variable_name> = run (classPath:”<classPath>”) (method:”<method_name>”)
 93. And run until (“<file_path>”) response.<JSON_path> == <expected_value>
 94. Then match response time < Milliseconds
-
-

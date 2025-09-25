@@ -1,0 +1,23 @@
+1.	Then match response.<Json_path> == <variable_name>
+2.	Then match responseDataType.<Json_path> == 'integer'
+3.	Then match responseDataType.<Json_path> == 'float'
+4.	Then match responseDataType.<Json_path> == 'boolean'
+5.	Then match responseDataType.<Json_path> == 'string'
+6.	Then match responseDataType.<Json_path> == 'array'
+7.	Then match response = expected
+8.	Then match response.<Json_path> != null
+9.	Then match response.<ArrayName>[*].<AttributeName> contains <Variable>
+10.	Then match response.<ArrayName>[*].<AttributeName> contains "<String Value>"
+11.	Then match response.<ArrayName>[*].<AttributeName> !contains <Variable>
+12.	Then match response.<ArrayName>[*].<AttributeName> !contains <Variable>
+13.	Then match responseDataType.<jsonPath> == '<expectedType>'
+14.	Then status <expected_status_code>
+15.	Then response.<Json_path> = <value>
+16.	Then match <variable1> == <variable2>
+17.	Then match <variable1> != <variable2>
+18.	Then match response != null
+19.	Then match response == null
+20.	Then match response == []
+21.	Then match response != []
+22.	Then match response time < Milliseconds
+23. Then Status <expected_status_code>
