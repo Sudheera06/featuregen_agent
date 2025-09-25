@@ -64,6 +64,32 @@ PLACEHOLDER_REGEX = {
     "Milliseconds": r"\d+",
 }
 
+
+def _normalize_line(raw: str) -> str:
+    """Clean up a template line:
+    - remove leading numbering like '12. ' or '1\t'
+    - strip trailing inline descriptions after ' - '
+    - normalize fancy quotes to straight quotes
+    - collapse extra spaces
+    """
+    s = raw.strip()
+    if not s:
+        return s
+    # Drop leading numbering (e.g., '12. ')
+    s = re.sub(r"^\s*\d+[\.)\-]\s*", "", s)
+    # Remove trailing inline descriptions after ' - '
+    # e.g., '* call variable_name - step to call and use the variable'
+    s = re.split(r"\s+-\s+", s, maxsplit=1)[0].strip()
+    # Normalize quotes
+    s = s.replace("\u201C", '"').replace("\u201D", '"').replace("“", '"').replace("”", '"')
+    # Fix common typos of GIven
+    s = re.sub(r"^GIven\b", "Given", s)
+    # Collapse whitespace sequences to single spaces (but keep docstring indent cues)
+    s = re.sub(r"[\t\x0b\x0c]+", " ", s)
+    s = re.sub(r"\s{2,}", " ", s)
+    return s
+
+
 def _compile_templates(lines: list[str], assertion: bool) -> list[str]:
     """
     Convert template lines to anchored regex patterns.
@@ -71,21 +97,22 @@ def _compile_templates(lines: list[str], assertion: bool) -> list[str]:
     """
     patterns = []
     for raw in lines:
-        s = raw.strip()
+        s = _normalize_line(raw)
         if not s or s.startswith("#"):
             continue
 
+        # Ignore non-Gherkin utility lines that start with '*' to keep the allowlist clean
+        if s.lstrip().startswith("*"):
+            continue
+
         # If the template starts without a Gherkin keyword (e.g., "match response..."),
-        # wrap it so it must be used as Then/And.
+        # wrap it so it must be used as Then/And (for assertions) or any step kw for steps.
         has_kw = re.match(r"^(Feature|Background|Scenario|Given|When|Then|And)\b", s, re.I)
-        body = s if has_kw else s  # body is s; we’ll prefix flexibly for steps below
 
         # Build the flexible prefix for step lines (Given/When/Then/And)
         if assertion:
-            # Assertions must be Then/And lines
             prefix = r"(?:Then|And)\s+"
         else:
-            # Normal steps can be Given/When/Then/And
             prefix = r"(?:Given|When|Then|And)\s+"
 
         # If template already has a keyword, don't double add
@@ -102,17 +129,23 @@ def _compile_templates(lines: list[str], assertion: bool) -> list[str]:
         patterns.append(r"^\s*" + out + r"\s*$")
     return patterns
 
+
 def _load_file(path_getter):
     path = path_getter()
     return path.read_text(encoding="utf-8").splitlines() if path.exists() else []
+
 
 def rulebook_loader(state: GraphState) -> dict:
     keyword_lines = _load_file(get_keywords_path)
     assertion_lines = _load_file(get_assertions_path)
 
+    # Keep the original templates for traceability, but we compile from normalized lines
+    cleaned_keywords = [ln for ln in (_normalize_line(x) for x in keyword_lines) if ln and not ln.startswith("#")]
+    cleaned_assertions = [ln for ln in (_normalize_line(x) for x in assertion_lines) if ln and not ln.startswith("#")]
+
     policy = Policy(
-        custom_step_templates=[ln.strip() for ln in keyword_lines if ln.strip() and not ln.strip().startswith("#")],
-        assertion_templates=[ln.strip() for ln in assertion_lines if ln.strip() and not ln.strip().startswith("#")]
+        custom_step_templates=cleaned_keywords,
+        assertion_templates=cleaned_assertions,
     )
     policy.compiled_step_patterns = _compile_templates(policy.custom_step_templates, assertion=False)
     policy.compiled_assertion_patterns = _compile_templates(policy.assertion_templates, assertion=True)

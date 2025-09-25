@@ -45,8 +45,21 @@ def generate_endpoint(req: GenerateEndpointRequest):
             "basic": sc.basic_gherkin,
             "enriched": sc.enriched_gherkin or ""
         })
-    # return GenerateResponse(issues=final_state.issues, scenarios=scenarios)
     return GenerateResponse(scenarios=scenarios)
+
+@app.post("/generate-merged-feature")
+def generate_merged_feature(req: GenerateEndpointRequest):
+    initial = GraphState(
+        spec_type="endpoint",
+        endpoint_input=req.endpoint
+    )
+    result = GRAPH.invoke(initial)
+    final_state = GraphState(**result) if isinstance(result, dict) else result
+    feature_text = getattr(final_state, "artifacts", {}).get("feature_text", "")
+    # Fallback: if artifacts dict not present, try attribute
+    if not feature_text and hasattr(final_state, "artifacts") and isinstance(final_state.artifacts, dict):
+        feature_text = final_state.artifacts.get("feature_text", "")
+    return {"feature": feature_text}
 
 
 @app.get("/healthz")
@@ -62,4 +75,4 @@ def reload_keywords():
     loaded = rulebook_loader.__wrapped__ if hasattr(rulebook_loader, "__wrapped__") else rulebook_loader
     # call with an empty state
     result = loaded(type("S", (), {})())  # fake state; loader ignores it
-    return {"loaded_count": len(result.get("policy", {}).custom_step_templates or [])}
+    return {"loaded_count": len(result.get("policy", {}).get("custom_step_templates", []))}

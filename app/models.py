@@ -1,4 +1,4 @@
-from typing import List, Optional, Dict, Literal
+from typing import List, Optional, Dict, Literal, Any
 from pydantic import BaseModel, Field
 
 ScenarioKind = Literal["happy", "error", "edge"]
@@ -82,6 +82,9 @@ class GraphState(BaseModel):
     plan: List[PlanItem] = Field(default_factory=list)
     scenarios: List[Scenario] = Field(default_factory=list)
     issues: List[str] = Field(default_factory=list)
+
+    # Artifacts/output bundle for downstream nodes & APIs
+    artifacts: Dict[str, Any] = Field(default_factory=dict)
 
 
 class GenerateRequest(BaseModel):

@@ -10,6 +10,33 @@ def render_schema_hints(hints: dict) -> str:
     lines = [f"- {k}: {v}" for k, v in hints.items()]
     return "Prefer using these fields in assertions when relevant:\n" + "\n".join(lines) + "\n"
 
+def render_feature_title(state) -> str:
+    if getattr(state, "endpoint_input", None):
+        m = state.endpoint_input.method
+        desc = state.endpoint_input.description or state.endpoint_input.path
+        return f"{m} {desc} Endpoint"
+    return "Generated Feature"
+
+def render_background_block(state) -> str:
+    """
+    If you're in single-endpoint mode and you want Background with baseUrl + Content-Type,
+    return a minimal two-line background snippet the model should include.
+    """
+    if not getattr(state, "endpoint_input", None):
+        return ""
+    host = (state.endpoint_input.host or "").rstrip("/")
+    # split host + path into baseUrl + leaf (e.g., .../contracting-data + "/stage-reasons")
+    path = state.endpoint_input.path.rstrip("/")
+    parts = path.rsplit("/", 1)
+    base = parts[0] if len(parts) > 1 else ""
+    base_url = (host + base) if base else host
+    if not base_url:
+        return ""
+    return (
+        'Background:\n'
+        f'* def baseUrl = "{base_url}"\n'
+        'And header Content-Type = "application/json"'
+    )
 
 BASIC_SCENARIO_PROMPT = """You are a test designer. Produce a minimal, syntactically correct Gherkin.
 
@@ -67,4 +94,40 @@ Input Gherkin:
 {gherkin}
 
 Output: Gherkin only.
+"""
+
+MERGER_PROMPT = """You are consolidating multiple short Gherkin/Karate scenarios into ONE high-quality feature file.
+
+## Hard constraints
+- Output exactly ONE feature file (single `Feature:` header).
+- If a Background is provided below, include it verbatim at the top.
+- Group all steps into properly named `Scenario:` blocks.
+- Do NOT wrap the output in code fences. No backticks.
+- Use only the sentences allowed by the STEP templates for non-assertion lines,
+  and the ASSERTION templates for Then/And lines.
+- Do not invent new phrasing or keywords beyond what templates allow.
+- Prefer concise, readable scenarios. Remove duplicates. Keep ordering: happy → error → edge.
+- Ensure EVERY scenario has at least one explicit status assertion from the ASSERTION templates.
+- No narrative lines or comments that are not part of valid steps.
+- Keep docstrings for request bodies exactly under the line `And request body :` bounded by triple quotes.
+
+## Feature header to use
+Feature: {feature_title}
+
+## Optional Background to include
+{background_block}
+
+## Allowed STEP templates (non-assertion)
+{step_block}
+
+## Allowed ASSERTION templates
+{assert_block}
+
+## Schema hints (prefer asserting on these when relevant)
+{schema_hints}
+
+## Scenarios to merge (keep intent, deduplicate, normalize)
+{scenarios_block}
+
+-- End of input. Produce ONLY the final merged feature content.
 """
