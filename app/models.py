@@ -90,5 +90,5 @@ class GenerateRequest(BaseModel):
 
 
 class GenerateResponse(BaseModel):
-    issues: List[str]
+    # issues: List[str]
     scenarios: List[Dict[str, str]]

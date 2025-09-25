@@ -25,7 +25,8 @@ def generate(req: GenerateRequest):
             "basic": sc.basic_gherkin,
             "enriched": sc.enriched_gherkin or ""
         })
-    return GenerateResponse(issues=final_state.issues, scenarios=scenarios)
+    # return GenerateResponse(issues=final_state.issues, scenarios=scenarios)
+    return GenerateResponse(scenarios=scenarios)
 
 
 @app.post("/generate-endpoint", response_model=GenerateResponse)
@@ -44,7 +45,8 @@ def generate_endpoint(req: GenerateEndpointRequest):
             "basic": sc.basic_gherkin,
             "enriched": sc.enriched_gherkin or ""
         })
-    return GenerateResponse(issues=final_state.issues, scenarios=scenarios)
+    # return GenerateResponse(issues=final_state.issues, scenarios=scenarios)
+    return GenerateResponse(scenarios=scenarios)
 
 
 @app.get("/healthz")
