@@ -126,6 +126,7 @@ MERGER_PROMPT = """You are consolidating multiple short Gherkin/Karate scenarios
 - Ensure EVERY scenario has at least one explicit status assertion from the ASSERTION templates.
 - No narrative lines or comments that are not part of valid steps.
 - Keep docstrings for request bodies exactly under the line `And request body :` bounded by triple quotes.
+- When merging the scenarios with the Background, ensure the URL parts are not duplicated in the Scenario steps.
 
 ## Feature header to use
 Feature: {feature_title}

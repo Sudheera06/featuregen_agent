@@ -19,6 +19,7 @@ class EndpointInput(BaseModel):
     description: Optional[str] = None
     tag: Optional[str] = None
     sample_response: Optional[dict] = None  # the example JSON
+    parameters: Optional[Dict[str, Any]] = None  # NEW: raw parameter specs including json_path & actual_value
 
 
 class GenerateEndpointRequest(BaseModel):
