@@ -12,10 +12,12 @@ from app.nodes.validator import validator
 from app.nodes.checklist_verifier import checklist_verifier
 from app.nodes.sanitizer import sanitizer
 from app.nodes.scenario_merger import scenario_merger
+from app.nodes.scenario_seed_loader import scenario_seed_loader
 
 def build_graph():
     g = StateGraph(GraphState)
     g.add_node("rulebook_loader", rulebook_loader)
+    g.add_node("scenario_seed_loader", scenario_seed_loader)
     g.add_node("spec_ingestor", spec_ingestor)
     g.add_node("endpoint_planner", endpoint_planner)
     g.add_node("scenario_drafter", scenario_drafter)            # happy
@@ -30,7 +32,8 @@ def build_graph():
 
     # flow
     g.set_entry_point("rulebook_loader")
-    g.add_edge("rulebook_loader", "spec_ingestor")
+    g.add_edge("rulebook_loader", "scenario_seed_loader")
+    g.add_edge("scenario_seed_loader", "spec_ingestor")
     g.add_edge("spec_ingestor", "endpoint_planner")
     g.add_edge("endpoint_planner", "scenario_drafter")
     g.add_edge("scenario_drafter", "negative_edge_generator")

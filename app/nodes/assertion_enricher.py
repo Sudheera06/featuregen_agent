@@ -1,8 +1,7 @@
 from app.models import GraphState
 from app.llm import generate_text
 from app.prompts import ASSERTION_ENRICH_PROMPT, render_templates_block, render_schema_hints
-
-MODEL = "gemini-1.5-pro"
+from app.config import MODEL
 
 def assertion_enricher(state: GraphState) -> dict:
     enriched = []

@@ -1,0 +1,121 @@
+Positive Scenarios:
+- Successful resource retrieval by valid identifier
+- Retrieval with required parameters only
+- Retrieval including optional parameters
+- Filtering with valid query parameters
+- Sorting results (ascending / descending) with valid fields
+- Pagination within allowed limits (page number & size)
+- Field projection / selecting specific fields
+- Response contains expected data types for every field
+- Date/time fields returned in expected format
+- Numeric identifiers returned in agreed representation (string or number)
+- Arrays contain elements of correct type
+- Successful creation with minimum required fields
+- Creation with all permissible fields populated
+- Creation referencing existing related resources
+- Descriptive validation messages for correct inputs passing validation
+- Idempotent handling of safely repeatable create requests (where designed)
+- Successful full update of a resource
+- Successful partial update of a resource (single / multiple fields)
+- Update that leaves values unchanged handled gracefully
+- Update with maximal allowed field set
+- Version number increments on update (where versioning exists)
+- Access to historical versions (if supported)
+- Successful deletion of a resource
+- Deleted resource becomes inaccessible afterwards
+- Cascading delete correctly removes / updates dependents (if defined)
+- Soft delete flags resource without hard removal (if implemented)
+- Successful restoration (undelete) of soft-deleted resource
+- Restoration preserves prior state where expected
+- Retrieval of available HTTP methods / metadata
+- Correct CORS / preflight headers for allowed origins
+- Proper handling of preflight requests
+- Concurrency resolved cleanly when ETag / If-Match provided
+- Conflict-free simultaneous updates when using proper versioning
+- Performance within acceptable latency for minimal dataset
+- Performance within acceptable latency for maximal dataset
+- Triggered workflows / notifications executed after valid create/update
+- Related resource counters / aggregates updated correctly
+- Security layer correctly allows authorized, valid requests
+
+Negative Scenarios:
+- Missing required fields
+- Empty request body where body is required
+- Body with only whitespace
+- Fields present but empty strings where not allowed
+- Null vs undefined handling discrepancies
+- Invalid data types (string instead of number, number instead of string, etc.)
+- Numeric precision / scale violations
+- Out-of-range numeric values (below min / above max)
+- Negative numbers where only positive allowed
+- Use of -0, NaN, Infinity in numeric fields
+- Invalid enumeration value
+- Incorrect date/time format
+- Future date where only past allowed (and vice versa)
+- Invalid boolean representations
+- Array supplied instead of object
+- Object supplied instead of array
+- Array elements of mixed / invalid types
+- Exceeding maximum array length
+- Duplicate values in fields requiring uniqueness
+- Strings exceeding maximum length
+- Extremely large payload size
+- Deeply nested object structures beyond allowed depth
+- Special characters in restricted fields
+- SQL injection attempt patterns
+- HTML / script tag injection (XSS attempt)
+- Unicode / emoji in fields allowing only ASCII
+- Path traversal sequences in path-related fields
+- Control characters (tabs, newlines) in single-line fields
+- Field separator characters in restricted contexts
+- Invalid / unsupported query parameter name
+- Invalid query parameter value format
+- Query parameters with incorrect types
+- Negative pagination values (page / size)
+- Pagination size exceeding limit
+- Malformed JSON payload
+- Invalid or missing Content-Type where required
+- Unsupported media type
+- Non-existent resource identifier (well-formed but not found)
+- Malformed identifier (wrong format / type)
+- Invalid UUID format
+- Incorrect composite key formatting
+- Attempts to update non-existent resource
+- Attempts to update previously deleted resource
+- Attempts to delete non-existent resource
+- Attempts to restore resource not soft-deleted
+- Unauthorized access (no credentials)
+- Invalid / malformed authentication token
+- Expired authentication token
+- Revoked authentication token
+- Access using deactivated account
+- Insufficient permissions / role restrictions
+- Tenant isolation violation attempt
+- Resource ownership violation
+- Forbidden field-level update
+- Read-only field modification attempt
+- Quota / rate limit exceeded
+- Concurrency conflict (missing or stale ETag / version)
+- Simultaneous conflicting updates producing version mismatch
+- Logical inconsistency (e.g., endDate before startDate)
+- Business rule violation (domain-specific constraints)
+- Failed cascading delete due to dependency protection
+- Protected resource deletion attempt
+- Invalid soft delete state transition
+- Missing required headers (authorization, correlation, etc.)
+- Unexpected additional properties where not allowed
+- Schema validation mismatch
+- Timeout / slow response beyond SLA
+- Server error triggered by valid-looking input (unexpected 5xx)
+- Preflight request missing required CORS headers
+- CORS request from disallowed origin
+- Injection payloads not properly rejected
+- Attempted XSS not neutralized
+- Incorrect handling of null vs absent optional field
+- Duplicate create request creating unintended duplicates (idempotency failure)
+- Security audit / logging omissions (detected via negative test)
+- Invalid conflict resolution path during merge
+- Race condition revealing stale data (read after concurrent write)
+- Misclassified status code (e.g., 500 instead of 400) under invalid input
+- Incorrect error payload structure (missing code/message)
+

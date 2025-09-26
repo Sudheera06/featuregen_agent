@@ -1,3 +1,8 @@
+import random
+
+from app.config import SEED_SAMPLE_SIZE_PER_PROMPT
+
+
 def render_templates_block(title: str, templates: list[str]) -> str:
     if not templates:
         return f"{title}: (none)"
@@ -38,7 +43,15 @@ def render_background_block(state) -> str:
         'And header Content-Type = "application/json"'
     )
 
-BASIC_SCENARIO_PROMPT = """You are a test designer. Produce a minimal, syntactically correct Gherkin.
+def render_seed_hints(title: str, items: list[str]) -> str:
+    if not items:
+        return f"{title}: (none)"
+    sample = random.sample(items, k=min(SEED_SAMPLE_SIZE_PER_PROMPT, len(items)))
+    joined = "\n- " + "\n- ".join(sample)
+    return f"{title} (prefer covering one idea below):{joined}\n"
+
+
+BASIC_SCENARIO_PROMPT = """You are a test designer. Produce a minimal, syntactically correct Gherkin. 
 
 Rules:
 - One 'Feature' and one 'Scenario'.
@@ -48,11 +61,13 @@ Rules:
 
 {step_block}
 {schema_hints}
+{seed_block}
 
 Input:
 METHOD: {method}
 PATH: {path}
 SUMMARY: {summary}
+INTENT_TO_COVER: {intent}
 
 Output: Gherkin only.
 """
@@ -69,6 +84,7 @@ Rules:
 
 {step_block}
 {schema_hints}
+{seed_block}
 
 Endpoint:
 METHOD: {method}

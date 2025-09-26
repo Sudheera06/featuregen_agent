@@ -24,6 +24,7 @@ class EndpointInput(BaseModel):
 class GenerateEndpointRequest(BaseModel):
     spec_type: Literal["endpoint"]            # fixed for this route
     endpoint: EndpointInput
+    scenario_seeds: Optional[Dict[str, List[str]]] = None
 
 
 class Scenario(BaseModel):
@@ -82,9 +83,9 @@ class GraphState(BaseModel):
     plan: List[PlanItem] = Field(default_factory=list)
     scenarios: List[Scenario] = Field(default_factory=list)
     issues: List[str] = Field(default_factory=list)
-
-    # Artifacts/output bundle for downstream nodes & APIs
     artifacts: Dict[str, Any] = Field(default_factory=dict)
+
+    scenario_seeds: Dict[str, List[str]] = Field(default_factory=dict)
 
 
 class GenerateRequest(BaseModel):

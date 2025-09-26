@@ -7,9 +7,8 @@ from app.prompts import (
     render_background_block,
 )
 from app.models import GraphState
+from app.config import MODEL
 import re
-
-MODEL = "gemini-1.5-pro"
 
 
 def _strip_code_fences(text: str) -> str:

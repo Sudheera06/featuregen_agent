@@ -3,6 +3,9 @@ from pathlib import Path
 
 KEYWORDS_FILE = os.getenv("CUSTOM_KEYWORDS_FILE", "keywords.txt")
 ASSERTIONS_FILE = os.getenv("CUSTOM_ASSERTIONS_FILE", "assertions.txt")
+SCENARIO_SEEDS_PATH = "Scenarios.txt"
+SEED_SAMPLE_SIZE_PER_PROMPT = 5
+MODEL = "gemini-2.0-flash"
 
 
 def _resolve_with_fallbacks(preferred: str, alternatives: list[str]) -> Path:

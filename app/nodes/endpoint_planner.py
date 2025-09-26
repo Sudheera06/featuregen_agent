@@ -1,41 +1,37 @@
+import random
+
 from app.models import GraphState, PlanItem
 
 def endpoint_planner(state: GraphState) -> dict:
     """
-    Minimal planner:
-    - pick up to 5 endpoints total
-    - make a plan with a few happy/error/edge slots (respect policy targets where possible)
+    Universal planner (endpoint-name agnostic):
+    - Use policy targets to decide how many happy/error/edge scenarios.
+    - Cycle through whatever endpoints are available (no tag/name logic, no caps).
     """
-    endpoints = state.endpoints[:]
-    planned_eps = []
-    seen_tags = set()
-    for ep in endpoints:
-        tag = (ep.tags[0] if ep.tags else "_untagged")
-        if tag not in seen_tags:
-            seen_tags.add(tag)
-            planned_eps.append(ep)
-        if len(planned_eps) >= 5:
-            break
-
+    endpoints = state.endpoints[:]  # as provided by spec_ingestor
     plan = []
-    if not state.policy:
+    if not state.policy or not endpoints:
         return {"plan": plan}
 
-    # allocate scenario kinds according to policy targets (best-effort)
     targets = state.policy.checklist_targets
-    # cycle endpoints while creating plan slots
+
+    # simple round-robin over endpoints (even if it's just one)
     idx = 0
     def next_ep():
         nonlocal idx
-        ep = planned_eps[idx % len(planned_eps)]
+        ep = endpoints[idx % len(endpoints)]
         idx += 1
         return ep
 
+    # intents stay generic; counts come only from policy targets
     for _ in range(targets.get("happy", 0)):
-        plan.append(PlanItem(endpoint=next_ep(), kind="happy", intent="valid request returns success"))
+        plan.append(PlanItem(endpoint=next_ep(), kind="happy",
+                             intent="valid request returns success"))
     for _ in range(targets.get("error", 0)):
-        plan.append(PlanItem(endpoint=next_ep(), kind="error", intent="invalid input or missing resource"))
+        plan.append(PlanItem(endpoint=next_ep(), kind="error",
+                             intent="invalid input or missing resource"))
     for _ in range(targets.get("edge", 0)):
-        plan.append(PlanItem(endpoint=next_ep(), kind="edge", intent="boundary or special-character condition"))
+        plan.append(PlanItem(endpoint=next_ep(), kind="edge",
+                             intent="boundary or special-character condition"))
 
     return {"plan": plan}

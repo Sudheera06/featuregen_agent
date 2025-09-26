@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CopilotDiffPersistence">
+    <option name="pendingDiffs">
+      <map>
+        <entry key="$PROJECT_DIR$/scratch_test_templates.py">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/scratch_test_templates.py" />
+              <option name="updatedContent" value="import sys, re&#10;sys.path.append('d:/Projects/featuregen-agent')&#10;from app.nodes.rulebook_loader import rulebook_loader&#10;from app.models import GraphState&#10;&#10;st=GraphState(spec_type='endpoint')&#10;res=rulebook_loader(st)&#10;pol=res['policy']&#10;&#10;pats=[re.compile(x,re.I) for x in pol.compiled_step_patterns]&#10;apats=[re.compile(x,re.I) for x in pol.compiled_assertion_patterns]&#10;&#10;samples = [&#10;    'Given endpoint &quot;/data-setup-service/v2/contracting-data/stage-reasons&quot;',&#10;    'Given endpoint &quot;/v1/foo&quot;',&#10;    'When method GET',&#10;    'Then Status 200',&#10;    'Then status 200',&#10;]&#10;&#10;print('Step patterns:', len(pats))&#10;print('Assertion patterns:', len(apats))&#10;for ln in samples:&#10;    is_assert = ln.lower().startswith('then') or (ln.lower().startswith('and') and 'status' in ln.lower())&#10;    if is_assert:&#10;        ok = any(p.match(ln) for p in apats)&#10;        print('A', ln, '=&gt;', ok)&#10;    else:&#10;        ok = any(p.match(ln) for p in pats)&#10;        print('S', ln, '=&gt;', ok)&#10;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>
