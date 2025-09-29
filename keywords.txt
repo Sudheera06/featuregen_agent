@@ -1,80 +1,78 @@
-1. @SharedVariable
-2. @EndOfFeature
-3. Given def <variable_name> = <value>
-4. Given def <variable_name> = <value>
-5. * def <variable_name> = response
-6. * def <variable_name> = response.<json_path>
-7. * def variable_name = variable_value(“feature_name.feature”) - step to share the variable
-8. * call variable_name - step to call and use the variable
-9. Given endpoint "<url>"
-10. Given endpoint "<path>"
-11. Given queryParam <query_param_name> = "<query_param_value>"
-12. GIven queryParam query_param_name = variable_name
-13. And pathParam <path_param_name> = <value>
-14. And header header_name = "header_value"
-15. And header header_name = integer_value
-16. And header header_name = float_value
-17. And header header_name = true|false
-18. And header header-name = "header_value"
-19. And header header-name = integer_value
-20. And header header-name = float_value
-21. And header header-name = true|false
-22. And header Authorization = "authorization_type" token_variable
-23. And header header-name = "string_value" variable_name
-24. And upload file “path/to/your/file”
-25. Given expected read(“Json_file_path”)
-26. And request body :
-    """
-    values
-    """
-27. Given request read(Json_file_path)
-29. * set request.<json_path> - This step sets new json values or updates existing json values.
-30. * set request add - This step merges two json parts.
-31. When method <method>
-32. When method <method> path(“<path_parameter>”)
-33. Then def <variable_name> = response.<Json_path>
-50. Then def <variable_name> = response
-51. * print <string_message> - This step is used to print a message directly without any variable substitution.
-52. * print <string_message> <variable_name> - This step is used to print a message along with the value of a variable.
-53. * print <variable_name> - This step is used to print the value of a variable directly.
-54. * def <variable_name> = read(“<csv_file_path>”) - This step reads the csv file and stores the values as an json array inside a variable.
-55. * def <variable_name> = read(“<excel_sheet_path>”) sheet “<sheet_name>” row(<row_index>) col(<column_index>)
-56. * def <variable_name> = read excel sheet “<sheet_name>” row(<row_index>)
-57. * def <variable_name> = read(“<excel_sheet_path>”) sheet “<sheet_name>” row(<row_index>)
-58. * def <variable_name> = read excel sheet “<sheet_name>” row(<row_index>)
-59. * def <variable_name> = read(“<excel_sheet_path>”) sheet “<sheet_name>” col(<row_index>)
-60. * def <variable_name> = read excel sheet “<sheet_name>” col(<row_index>)
-61. * def <variable_name> = read(“<excel_sheet_path>”) sheet “<sheet_name>”
-62. * def <variable_name> = read excel sheet “<sheet_name>” col(<row_index>)
-63. * def <variable_name> = read google spreadsheet-id “<spreadsheet-id>” sheet “<sheet_name>” col(“<column_name>”) row(<row_index>)
-64. * def <variable_name> = read google spreadsheet-id “<spreadsheet-id>” sheet “<sheet_name>” col(<column_index>) row(<row_index>)
-65. * def <variable_name> = read google sheet “<sheet_name>” col(<column_index>)
-66. * def <variable_name> = read google sheet “<sheet_name>” col(“<column_name>”)
-67. * def <variable_name> = read google spreadsheet-id “<spreadsheet-id>” sheet row(<row_index>)
-68. * def <variable_name> = read google sheet “<sheet_name>” row(<row_index>)
-69. * def <variable_name> = read google spreadsheet-id “<spreadsheet-id>” sheet “<sheet_name>” col(“<column_name>”)
-70. * def <variable_name> = read google sheet “<sheet_name>” col(“<column_name>”)
-71. * def <variable_name> = read google spreadsheet-id “<spreadsheet-id>” sheet “<sheet_name>”
-72. * def <variable_name> = read google sheet “<sheet_name>”
-73. And cookie cookieName = "string_value"
-74. And cookie cookieName = integer_value
-75. And cookie cookieName = boolean_value
-76. And cookie cookieName = variable_value
-77. And cookie cookieName = float_value
-78. And cookie cookieName =
-79. And store cookie "cookieName" as "variableName"
-80. And basic auth username "username_value" and password "password_value"
-81. And bearer token auth token "token_variable"
-82. And oauth token auth token "token_variable"
-83. And digest auth username "username_variable" and password "password_variable"
-84. * set <variable_name>.<JSON_path> = <new_value>
-85. * remove <variable_name>.<JSON_path>
-86. * <variable_name> add
-87. * set request.<JSON_path> = <new_value>
-88. * remove request.<JSON_path>
-89. And request add
-90. And run (classPath:”<feature_file_path>”)
-91. def <variable_name> = run (classPath:”<feature_file_path>”)
-92. * def <variable_name> = run (classPath:”<classPath>”) (method:”<method_name>”)
-93. And run until (“<file_path>”) response.<JSON_path> == <expected_value>
-94. Then match response time < Milliseconds
+1. Given def <variable_name> = "<value>"
+2. * def <variable_name> = response
+3. * def <variable_name> = response.<json_path>
+4. * def variable_name = variable_value(“feature_name.feature”) - step to share the variable
+5. * call variable_name - step to call and use the variable
+6. Given endpoint "<url>"
+7. Given endpoint "<path>"
+8. Given queryParam <query_param_name> = "<query_param_value>"
+9. GIven queryParam query_param_name = variable_name
+10. And pathParam <path_param_name> = <value>
+11. And header header_name = "header_value"
+12. And header header_name = integer_value
+13. And header header_name = float_value
+14. And header header_name = true|false
+15. And header header-name = "header_value"
+16. And header header-name = integer_value
+17. And header header-name = float_value
+18. And header header-name = true|false
+19. And header Authorization = "authorization_type" token_variable
+20. And header header-name = "string_value" variable_name
+21. And upload file “path/to/your/file”
+22. Given expected read(“Json_file_path”)
+23. And request body :
+     """
+     values
+     """
+24. Given request read(Json_file_path)
+25. * set request.<json_path> - This step sets new json values or updates existing json values.
+26. * set request add - This step merges two json parts.
+27. When method <method>
+28. When method <method> path(“<path_parameter>”)
+29. Then def <variable_name> = response.<Json_path>
+30. Then def <variable_name> = response
+31. * print <string_message> - This step is used to print a message directly without any variable substitution.
+32. * print <string_message> <variable_name> - This step is used to print a message along with the value of a variable.
+33. * print <variable_name> - This step is used to print the value of a variable directly.
+34. * def <variable_name> = read(“<csv_file_path>”) - This step reads the csv file and stores the values as an json array inside a variable.
+35. * def <variable_name> = read(“<excel_sheet_path>”) sheet “<sheet_name>” row(<row_index>) col(<column_index>)
+36. * def <variable_name> = read excel sheet “<sheet_name>” row(<row_index>)
+37. * def <variable_name> = read(“<excel_sheet_path>”) sheet “<sheet_name>” row(<row_index>)
+38. * def <variable_name> = read excel sheet “<sheet_name>” row(<row_index>)
+39. * def <variable_name> = read(“<excel_sheet_path>”) sheet “<sheet_name>” col(<row_index>)
+40. * def <variable_name> = read excel sheet “<sheet_name>” col(<row_index>)
+41. * def <variable_name> = read(“<excel_sheet_path>”) sheet “<sheet_name>”
+42. * def <variable_name> = read excel sheet “<sheet_name>” col(<row_index>)
+43. * def <variable_name> = read google spreadsheet-id “<spreadsheet-id>” sheet “<sheet_name>” col(“<column_name>”) row(<row_index>)
+44. * def <variable_name> = read google spreadsheet-id “<spreadsheet-id>” sheet “<sheet_name>” col(<column_index>) row(<row_index>)
+45. * def <variable_name> = read google sheet “<sheet_name>” col(<column_index>)
+46. * def <variable_name> = read google sheet “<sheet_name>” col(“<column_name>”)
+47. * def <variable_name> = read google spreadsheet-id “<spreadsheet-id>” sheet row(<row_index>)
+48. * def <variable_name> = read google sheet “<sheet_name>” row(<row_index>)
+49. * def <variable_name> = read google spreadsheet-id “<spreadsheet-id>” sheet “<sheet_name>” col(“<column_name>”)
+50. * def <variable_name> = read google sheet “<sheet_name>” col(“<column_name>”)
+51. * def <variable_name> = read google spreadsheet-id “<spreadsheet-id>” sheet “<sheet_name>”
+52. * def <variable_name> = read google sheet “<sheet_name>”
+53. And cookie cookieName = "string_value"
+54. And cookie cookieName = integer_value
+55. And cookie cookieName = boolean_value
+56. And cookie cookieName = variable_value
+57. And cookie cookieName = float_value
+58. And cookie cookieName =
+59. And store cookie "cookieName" as "variableName"
+60. And basic auth username "username_value" and password "password_value"
+61. And bearer token auth token "token_variable"
+62. And oauth token auth token "token_variable"
+63. And digest auth username "username_variable" and password "password_variable"
+64. * set <variable_name>.<JSON_path> = <new_value>
+65. * remove <variable_name>.<JSON_path>
+66. * <variable_name> add
+67. * set request.<JSON_path> = <new_value>
+68. * remove request.<JSON_path>
+69. And request add
+70. And run (classPath:”<feature_file_path>”)
+71. def <variable_name> = run (classPath:”<feature_file_path>”)
+72. * def <variable_name> = run (classPath:”<classPath>”) (method:”<method_name>”)
+73. And run until (“<file_path>”) response.<JSON_path> == <expected_value>
+74. Then match response time < Milliseconds
+

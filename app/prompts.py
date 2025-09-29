@@ -50,6 +50,29 @@ def render_seed_hints(title: str, items: list[str]) -> str:
     joined = "\n- " + "\n- ".join(sample)
     return f"{title} (prefer covering one idea below):{joined}\n"
 
+def render_parameters_block(parameters: dict | None) -> str:
+    """Render a concise parameter spec block for the LLM.
+    Large actual values are truncated to keep prompt size manageable.
+    """
+    if not parameters:
+        return "Parameters: (none)\n"
+    lines = ["Parameters (body/query/path/header specs):"]
+    for name, meta in parameters.items():
+        if not isinstance(meta, dict):
+            continue
+        loc = meta.get("in", "")
+        ptype = meta.get("type") or meta.get("schema", {}).get("type", "")
+        desc = (meta.get("description") or "").strip().replace('\n', ' ')
+        required = meta.get("required")
+        actual = meta.get("actual_value")
+        actual_str = ""
+        if actual is not None:
+            sval = str(actual)
+            if len(sval) > 800:
+                sval = sval[:800] + f"... (truncated {len(sval)-800} chars)"
+            actual_str = f" value={sval}"
+        lines.append(f"- {name} [{loc}] type={ptype} required={required}{actual_str} desc={desc}")
+    return "\n".join(lines) + "\n\n"
 
 BASIC_SCENARIO_PROMPT = """You are a test designer. Produce a minimal, syntactically correct Gherkin. 
 
@@ -62,7 +85,7 @@ Rules:
 {step_block}
 {schema_hints}
 {seed_block}
-
+{parameters_block}
 Input:
 METHOD: {method}
 PATH: {path}

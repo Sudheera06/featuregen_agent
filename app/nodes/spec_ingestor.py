@@ -76,10 +76,12 @@ def spec_ingestor(state: GraphState) -> dict:
         ep = Endpoint(
             path=ep_in.path,
             method=ep_in.method,
+            host=getattr(ep_in, "host", None),  # propagate host
             summary=ep_in.description,
             tags=[ep_in.tag] if ep_in.tag else [],
             request_example=request_example,
-            response_example=ep_in.sample_response
+            response_example=ep_in.sample_response,
+            parameters=ep_in.parameters
         )
         schema_hints = _extract_schema_hints(ep_in.sample_response or {})
         return {

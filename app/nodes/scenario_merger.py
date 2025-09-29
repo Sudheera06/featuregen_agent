@@ -43,7 +43,7 @@ def scenario_merger(state: GraphState) -> dict:
     # Collect enriched scenarios (fallback to basic if needed)
     scenario_texts = []
     for sc in getattr(state, "scenarios", []):
-        t = (sc.enriched_gherkin or sc.basic_gherkin or "").strip()
+        t = sc.enriched_gherkin.strip()
         if not t:
             continue
         # Drop any "Feature:" lines from individual fragments.

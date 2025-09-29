@@ -20,5 +20,6 @@ Then match response != null
 Then match response == null
 Then match response == []
 Then match response != []
+Then match response.<Json_path> != []
 Then match response time < Milliseconds
 Then status <expected_status_code>

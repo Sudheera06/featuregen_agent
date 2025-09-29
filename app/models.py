@@ -7,10 +7,21 @@ ScenarioKind = Literal["happy", "error", "edge"]
 class Endpoint(BaseModel):
     path: str
     method: str
+    host: Optional[str] = None  # NEW: base host (e.g. http://127.0.0.1:8000)
     summary: Optional[str] = None
     tags: List[str] = Field(default_factory=list)
     request_example: Optional[dict] = None
     response_example: Optional[dict] = None
+    # NEW: retain raw parameter specifications (including large payload values) for prompt context
+    parameters: Optional[Dict[str, Any]] = None
+
+    def full_url(self) -> str:
+        """Return fully-qualified URL if host provided, else path only.
+        Ensures single slash join.
+        """
+        if self.host:
+            return self.host.rstrip('/') + '/' + self.path.lstrip('/')
+        return self.path
 
 class EndpointInput(BaseModel):
     method: Literal["GET", "POST", "PUT", "PATCH", "DELETE"]
@@ -97,3 +108,18 @@ class GenerateRequest(BaseModel):
 class GenerateResponse(BaseModel):
     # issues: List[str]
     scenarios: List[Dict[str, str]]
+
+
+# NEW: request for writing provided feature text verbatim (no regeneration)
+class WriteFeatureTextRequest(BaseModel):
+    feature: str  # full Gherkin content from /generate-merged-feature
+    filename: Optional[str] = None  # optional desired filename
+    overwrite: bool = True  # whether to overwrite if file exists
+
+# NEW: request for generating & writing in one step (regeneration occurs)
+class WriteFeatureRequest(BaseModel):
+    spec_type: Literal["endpoint"]
+    endpoint: EndpointInput
+    scenario_seeds: Optional[Dict[str, List[str]]] = None
+    filename: Optional[str] = None
+    overwrite: bool = True

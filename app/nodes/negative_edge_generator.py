@@ -20,7 +20,7 @@ def negative_edge_generator(state: GraphState) -> dict:
 
         prompt = NEGATIVE_EDGE_PROMPT.format(
             method=ep.method,
-            path=ep.path,
+            path=ep.full_url(),  # include host if provided
             summary=ep.summary or "",
             intent=item.intent or item.kind,
             allowed_codes=", ".join(map(str, allowed_codes)),
