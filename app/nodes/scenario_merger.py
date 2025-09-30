@@ -1,85 +1,80 @@
 from app.llm import generate_text
-from app.prompts import (
-    MERGER_PROMPT,
-    render_templates_block,
-    render_schema_hints,
-    render_feature_title,
-    render_background_block,
-)
+from app.prompts import MERGER_PROMPT
 from app.models import GraphState
 from app.config import MODEL
 import re
 
 
+CODE_FENCE_RE = re.compile(r"^\s*```")
+FEATURE_HEADER_RE = re.compile(r"^\s*@.*$|^\s*Feature\s*:", re.IGNORECASE)  # for stripping per-fragment top headers
+
 def _strip_code_fences(text: str) -> str:
-    # Remove any ```...``` wrappers the model might add
     lines = []
-    fence = re.compile(r"^\s*```")
     for ln in text.splitlines():
-        if fence.match(ln):
+        if CODE_FENCE_RE.match(ln):
             continue
         lines.append(ln)
     return "\n".join(lines).strip()
 
-
 def _dedupe_blank_lines(text: str) -> str:
-    # Collapse multiple blank lines to a single blank line
     return re.sub(r"\n{3,}", "\n\n", text).strip()
 
+def _strip_fragment_headers(text: str) -> str:
+    """
+    For each fragment, drop any file-level headers (Feature: ..., top-file tags)
+    but keep Scenario/Scenario Outline blocks and their tags.
+    """
+    lines = []
+    for ln in text.splitlines():
+        if FEATURE_HEADER_RE.match(ln.strip()):
+            # skip top-level tags and 'Feature:' lines embedded in fragments
+            continue
+        lines.append(ln)
+    return "\n".join(lines).strip()
 
-def _fallback_feature(feature_title: str, background_block: str, scenario_texts: list[str]) -> str:
-    parts = [f"Feature: {feature_title}"]
-    if background_block:
-        parts.append(background_block)
-    # Ensure scenario fragments are separated
-    parts.append("\n\n".join(scenario_texts))
-    fallback = "\n\n".join(p for p in parts if p.strip())
-    if not fallback.endswith("\n"):
-        fallback += "\n"
-    return fallback
-
+def _fallback_feature(scenario_texts: list[str]) -> str:
+    """
+    Automatic fallback (no manual titling). Keeps you unblocked if the model returns nothing.
+    """
+    body = "\n\n".join(s for s in scenario_texts if s.strip())
+    merged = f"Feature: Merged API test scenarios\n\n{body}".rstrip() + "\n"
+    return merged
 
 def scenario_merger(state: GraphState) -> dict:
-    # Collect enriched scenarios (fallback to basic if needed)
-    scenario_texts = []
+    # Gather only enriched fragments
+    fragments: list[str] = []
     for sc in getattr(state, "scenarios", []):
-        t = sc.enriched_gherkin.strip()
+        t = (sc.enriched_gherkin or "").strip()
         if not t:
             continue
-        # Drop any "Feature:" lines from individual fragments.
-        t = "\n".join([ln for ln in t.splitlines() if not ln.strip().lower().startswith("feature:")]).strip()
-        scenario_texts.append(t)
+        # Drop per-fragment Feature headers / top-file tags to avoid duplication
+        t = _strip_fragment_headers(t)
+        if t:
+            fragments.append(t)
 
-    if not scenario_texts:
-        return {"issues": [*state.issues, "Merger: No scenarios to merge."], "artifacts": {"feature_text": ""}}
+    if not fragments:
+        return {
+            "issues": [*state.issues, "Merger: No enriched scenarios to merge."],
+            "artifacts": {"feature_text": ""}
+        }
 
-    feature_title = render_feature_title(state)
-    background_block = render_background_block(state)
-
-    step_block = render_templates_block("STEP templates", state.policy.custom_step_templates if state.policy else [])
-    assert_block = render_templates_block("ASSERTION templates", state.policy.assertion_templates if state.policy else [])
-    schema_h = render_schema_hints(getattr(state, "schema_hints", {}))
-
-    scenarios_block = "\n\n---\n\n".join(scenario_texts)
+    # Join fragments with a clear separator so the LLM sees boundaries
+    scenarios_block = "\n\n-----\n\n".join(fragments)
+    print(scenarios_block)
 
     prompt = MERGER_PROMPT.format(
-        feature_title=feature_title,
-        background_block=(background_block or "(none)"),
-        step_block=step_block,
-        assert_block=assert_block,
-        schema_hints=schema_h,
         scenarios_block=scenarios_block,
     )
 
     merged = generate_text(MODEL, prompt)
     merged = _strip_code_fences(merged)
-    merged = _dedupe_blank_lines(merged)
+    merged = _dedupe_blank_lines(merged).strip()
 
-    # Fallback if the model returned empty/invalid content
-    if not merged:
-        merged = _fallback_feature(feature_title, background_block, scenario_texts)
+    # Fallback if empty or missing a Feature header
+    if not merged or "Feature:" not in merged:
+        merged = _fallback_feature(fragments)
 
-    # Ensure single trailing newline (helps downstream tools)
+    # Ensure single trailing newline for downstream tools
     if not merged.endswith("\n"):
         merged += "\n"
 

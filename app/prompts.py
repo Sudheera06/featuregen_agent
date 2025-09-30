@@ -1,59 +1,30 @@
 import random
-
+import json
+from typing import Optional, Dict, List
 from app.config import SEED_SAMPLE_SIZE_PER_PROMPT
 
 
-def render_templates_block(title: str, templates: list[str]) -> str:
+def render_templates_block(title: str, templates: List[str]) -> str:
     if not templates:
-        return f"{title}: (none)"
+        return "{}: (none)".format(title)
     joined = "\n- " + "\n- ".join(templates)
-    return f"{title} (use exactly these templates; substitute placeholders):{joined}\n"
+    return "{} (use exactly these templates; substitute placeholders):{}\n".format(title, joined)
 
-def render_schema_hints(hints: dict) -> str:
+def render_schema_hints(hints: Dict[str, str]) -> str:
     if not hints:
         return "No schema hints."
-    lines = [f"- {k}: {v}" for k, v in hints.items()]
+    lines = ["- {}: {}".format(k, v) for k, v in hints.items()]
     return "Prefer using these fields in assertions when relevant:\n" + "\n".join(lines) + "\n"
 
-def render_feature_title(state) -> str:
-    if getattr(state, "endpoint_input", None):
-        m = state.endpoint_input.method
-        desc = state.endpoint_input.description or state.endpoint_input.path
-        return f"{m} {desc} Endpoint"
-    return "Generated Feature"
 
-def render_background_block(state) -> str:
-    """
-    If you're in single-endpoint mode and you want Background with baseUrl + Content-Type,
-    return a minimal two-line background snippet the model should include.
-    """
-    if not getattr(state, "endpoint_input", None):
-        return ""
-    host = (state.endpoint_input.host or "").rstrip("/")
-    # split host + path into baseUrl + leaf (e.g., .../contracting-data + "/stage-reasons")
-    path = state.endpoint_input.path.rstrip("/")
-    parts = path.rsplit("/", 1)
-    base = parts[0] if len(parts) > 1 else ""
-    base_url = (host + base) if base else host
-    if not base_url:
-        return ""
-    return (
-        'Background:\n'
-        f'* def baseUrl = "{base_url}"\n'
-        'And header Content-Type = "application/json"'
-    )
-
-def render_seed_hints(title: str, items: list[str]) -> str:
+def render_seed_hints(title: str, items: List[str]) -> str:
     if not items:
-        return f"{title}: (none)"
+        return "{}: (none)".format(title)
     sample = random.sample(items, k=min(SEED_SAMPLE_SIZE_PER_PROMPT, len(items)))
     joined = "\n- " + "\n- ".join(sample)
-    return f"{title} (prefer covering one idea below):{joined}\n"
+    return "{} (prefer covering one idea below):{}\n".format(title, joined)
 
-def render_parameters_block(parameters: dict | None) -> str:
-    """Render a concise parameter spec block for the LLM.
-    Large actual values are truncated to keep prompt size manageable.
-    """
+def render_parameters_block(parameters: Optional[dict]) -> str:
     if not parameters:
         return "Parameters: (none)\n"
     lines = ["Parameters (body/query/path/header specs):"]
@@ -69,105 +40,111 @@ def render_parameters_block(parameters: dict | None) -> str:
         if actual is not None:
             sval = str(actual)
             if len(sval) > 800:
-                sval = sval[:800] + f"... (truncated {len(sval)-800} chars)"
-            actual_str = f" value={sval}"
-        lines.append(f"- {name} [{loc}] type={ptype} required={required}{actual_str} desc={desc}")
+                sval = sval[:800] + "... (truncated {} chars)".format(len(sval)-800)
+            actual_str = " value={}".format(sval)
+        lines.append("- {} [{}] type={} required={}{} desc={}".format(name, loc, ptype, required, actual_str, desc))
     return "\n".join(lines) + "\n\n"
 
-BASIC_SCENARIO_PROMPT = """You are a test designer. Produce a minimal, syntactically correct Gherkin. 
+def render_request_body_json(example: Optional[dict]) -> str:
+    if not example:
+        return "(none)"
+    try:
+        return json.dumps(example, indent=2)
+    except Exception:
+        return str(example)
+
+BASIC_SCENARIO_PROMPT = """You are a test designer. Produce ONE minimal, syntactically correct Gherkin scenario for the given endpoint.
 
 Rules:
-- One 'Feature' and one 'Scenario'.
-- Use only Gherkin keywords.
-- For Given/When/And (non-assertion) steps, the text MUST match a STEP template.
-- Do NOT wrap in code fences.
+- Output must contain a Feature: header and a Scenario: block (single scenario only).
+- Include step: Given endpoint "<FULL_URL>" (use exactly this pattern with full URL provided below).
+- Always include the execution step: When method {method}
+- If REQUEST_BODY_JSON is not (none), include ONE docstring step EXACTLY in this form (no variation in wording or indentation):
+  And request body :\n    \"\"\"\n    <each line of REQUEST_BODY_JSON indented 4 spaces>\n    \"\"\"\n- If a request body is present, add header line: And header Content-Type = "application/json".
+- Use only Gherkin keywords and only allowed STEP templates for non-assertion steps.
+- Do NOT invent extra scenarios.
+- Do NOT wrap output in code fences.
+- Do NOT add assertions (Then/And) yet; leave those for later.
 
 {step_block}
-{schema_hints}
 {seed_block}
 {parameters_block}
-Input:
-METHOD: {method}
-PATH: {path}
-SUMMARY: {summary}
-INTENT_TO_COVER: {intent}
-
-Output: Gherkin only.
-"""
-
-
-
-NEGATIVE_EDGE_PROMPT = """You are a QA engineer. Create one Gherkin scenario for the endpoint and intent.
-
-Rules:
-- Use only Gherkin keywords.
-- For Given/When/And (non-assertion) steps, the text MUST match a STEP template.
-- End with one of these status codes: {allowed_codes}
-- Do NOT wrap output in code fences.
-
-{step_block}
-{schema_hints}
-{seed_block}
+REQUEST_BODY_JSON:
+{request_body_json}
 
 Endpoint:
 METHOD: {method}
-PATH: {path}
+FULL_URL: {path}
 SUMMARY: {summary}
 INTENT: {intent}
 
 Output: Gherkin only.
 """
 
-ASSERTION_ENRICH_PROMPT = """You are a senior QA engineer. Improve assertions in this Gherkin:
+NEGATIVE_EDGE_PROMPT = """You are a QA engineer. Produce ONE negative or edge Gherkin scenario for the endpoint and intent.
 
 Rules:
-- Add/replace Then/And assertion steps only using ASSERTION templates.
-- Prefer checking fields from the hints below.
-- Keep structure tidy; do not change intent.
-- Do NOT wrap in code fences.
+- Output must contain a Feature: header and a Scenario: block (single scenario only).
+- Include step: Given endpoint "<FULL_URL>".
+- Always include the execution step: When method {method}
+- If REQUEST_BODY_JSON is not (none), include the SAME docstring format described previously.
+- Use only provided STEP templates for setup steps.
+- Do NOT add assertions (Then/And) yet; leave those for later.
+- Do NOT wrap output in code fences.
 
-{assert_block}
-{schema_hints}
+{step_block}
+{seed_block}
+{parameters_block}
+REQUEST_BODY_JSON:
+{request_body_json}
 
-Input Gherkin:
-{gherkin}
+Endpoint:
+METHOD: {method}
+FULL_URL: {path}
+SUMMARY: {summary}
+INTENT: {intent}
 
 Output: Gherkin only.
 """
 
-MERGER_PROMPT = """You are consolidating multiple short Gherkin/Karate scenarios into ONE high-quality feature file.
+ASSERTION_ENRICH_PROMPT = """You are a senior QA engineer. Add appropriate assertion steps to this scenario.
 
-## Hard constraints
-- Output exactly ONE feature file (single `Feature:` header).
-- If a Background is provided below, include it verbatim at the top.
-- Group all steps into properly named `Scenario:` blocks.
-- Do NOT wrap the output in code fences. No backticks.
-- Use only the sentences allowed by the STEP templates for non-assertion lines,
-  and the ASSERTION templates for Then/And lines.
-- Do not invent new phrasing or keywords beyond what templates allow.
-- Prefer concise, readable scenarios. Remove duplicates. Keep ordering: happy → error → edge.
-- Ensure EVERY scenario has at least one explicit status assertion from the ASSERTION templates.
-- No narrative lines or comments that are not part of valid steps.
-- Keep docstrings for request bodies exactly under the line `And request body :` bounded by triple quotes.
-- When merging the scenarios with the Background, ensure the URL parts are not duplicated in the Scenario steps.
+Rules:
+- Only append or replace Then/And lines with ASSERTION templates provided.
+- Choose ONLY assertions that logically apply based on the request data and typical API behavior.
+- Ensure at least one status assertion (Then status <code>). If one exists, you may keep it.
+- Prefer 2-4 total assertions (status + a few field validations) unless scenario obviously requires fewer.
+- Do NOT modify non-assertion Given/When steps except to normalize spacing.
+- Do NOT wrap in code fences.
 
-## Feature header to use
-Feature: {feature_title}
-
-## Optional Background to include
-{background_block}
-
-## Allowed STEP templates (non-assertion)
-{step_block}
-
-## Allowed ASSERTION templates
+ASSERTION templates:
 {assert_block}
-
-## Schema hints (prefer asserting on these when relevant)
 {schema_hints}
+REQUEST_BODY_JSON (for context):
+{request_body_json}
 
-## Scenarios to merge (keep intent, deduplicate, normalize)
-{scenarios_block}
+Input Scenario:
+{gherkin}
 
--- End of input. Produce ONLY the final merged feature content.
+Output: Gherkin only with assertions added.
 """
+
+MERGER_PROMPT = """You are an expert BDD editor.
+Merge the following Gherkin scenario fragments into ONE production-quality feature file.
+
+Requirements:
+- Create a meaningful `Feature:` title inferred from the scenarios (do NOT ask for one).
+- Add a `Background:` ONLY if multiple scenarios share identical setup (move only identical Given/And steps there).
+- Preserve the behavioral intent of each scenario and all concrete data values, paths, and assertions.
+- Deduplicate near-duplicate scenarios; keep one best-normalized version.
+- Normalize wording and step keywords for consistency, but do NOT invent new behaviors.
+- Keep any scenario-level tags if they appear in the fragments (you may consolidate tags sensibly).
+- Use standard Gherkin formatting with blank lines between scenarios.
+
+Input scenario fragments:
+<<<
+{scenarios_block}
+>>>
+
+Output:
+Return ONLY the final feature file text, starting with `Feature:` and containing valid Gherkin."""
