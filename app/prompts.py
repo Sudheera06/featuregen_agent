@@ -109,19 +109,33 @@ Output: Gherkin only.
 
 ASSERTION_ENRICH_PROMPT = """You are a senior QA engineer. Add appropriate assertion steps to this scenario.
 
-Rules:
+HARD RULES (STRICT):
+- Do not guess the error messages if they are not provided in SAMPLE_RESPONSE.
+- You MUST ONLY assert on fields that exist in SAMPLE_RESPONSE (see ALLOWED_RESPONSE_FIELDS).
+- You MUST ONLY use literal values that appear in SAMPLE_RESPONSE_VALUES. Do NOT invent or infer values.
+- Include data type and structural assertions based on SAMPLE_RESPONSE.
+- If SAMPLE_RESPONSE is empty, add ONLY a status-code assertion (no field/value checks).
+- The 'Then status XXX' assertion refers ONLY to the HTTP response status code (e.g., 200, 400, 401). 
+  Never confuse this with fields inside the JSON body (such as json_path.code).
+- You MUST ONLY use valid HTTP status codes (integers in the range 100-599) for 'Then status XXX' assertions. Never use values from the response body, even if they look like numbers.
+
+General Rules:
 - Only append or replace Then/And lines with ASSERTION templates provided.
-- Choose ONLY assertions that logically apply based on the request data and typical API behavior.
-- Ensure at least one status assertion (Then status <code>). If one exists, you may keep it.
-- Prefer 2-4 total assertions (status + a few field validations) unless scenario obviously requires fewer.
-- Do NOT modify non-assertion Given/When steps except to normalize spacing.
+- Never use 'Then status ...' to check values from the response body (e.g., do NOT write 'Then status 1').
+- Ensure at least one HTTP status assertion. Keep an existing one if present.
+- Prefer 2-4 total assertions unless the scenario clearly requires fewer.
+- Do NOT modify non-assertion Given/When steps ex0cept to normalize spacing.
 - Do NOT wrap in code fences.
 
 ASSERTION templates:
 {assert_block}
 {schema_hints}
+
 REQUEST_BODY_JSON (for context):
 {request_body_json}
+
+SAMPLE_RESPONSE
+{sample_response}
 
 Input Scenario:
 {gherkin}
@@ -134,7 +148,7 @@ Merge the following Gherkin scenario fragments into ONE production-quality featu
 
 Requirements:
 - Create a meaningful `Feature:` title inferred from the scenarios (do NOT ask for one).
-- Add a `Background:` ONLY if multiple scenarios share identical setup (move only identical Given/And steps there).
+- Add a `Background:` ONLY if multiple scenarios share identical setup (move only identical urls that is repeated and Content-type headers).
 - Preserve the behavioral intent of each scenario and all concrete data values, paths, and assertions.
 - Deduplicate near-duplicate scenarios; keep one best-normalized version.
 - Normalize wording and step keywords for consistency, but do NOT invent new behaviors.
@@ -146,5 +160,19 @@ Input scenario fragments:
 {scenarios_block}
 >>>
 
-Output:
-Return ONLY the final feature file text, starting with `Feature:` and containing valid Gherkin."""
+Example Output:
+- Return ONLY the final feature file text, starting with `Feature:` and containing valid Gherkin.
+- Follow this precise structure:
+
+        Feature: [API Endpoint Description]
+
+            Background:
+              * def baseUrl = "[API Base URL]"
+              And header Content-Type = "application/json"
+
+            Scenario: [Describes the first step or logical segment of the business flow]
+                Given endpoint baseUrl + "/step1/path"
+                When method POST
+                Then status 200
+               **Use only ASSERTIONS from the provided list**
+"""

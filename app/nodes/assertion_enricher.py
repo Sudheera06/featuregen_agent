@@ -10,11 +10,14 @@ def assertion_enricher(state: GraphState) -> dict:
         schema_h = render_schema_hints(state.schema_hints)
         body_json = render_request_body_json(getattr(sc.endpoint, "request_example", None))
         base_gherkin = sc.enriched_gherkin or sc.basic_gherkin
+        sample_response = getattr(sc.endpoint, "response_example", None)
+        print(sample_response)
         prompt = ASSERTION_ENRICH_PROMPT.format(
             gherkin=base_gherkin,
             assert_block=ablock,
             schema_hints=schema_h,
             request_body_json=body_json,
+            sample_response=sample_response,
         )
         improved = generate_text(MODEL, prompt).strip()
         sc.enriched_gherkin = improved

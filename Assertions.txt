@@ -12,7 +12,7 @@ Then match response.<ArrayName>[*].<AttributeName> contains "<String Value>"
 Then match response.<ArrayName>[*].<AttributeName> !contains <Variable>
 Then match response.<ArrayName>[*].<AttributeName> !contains <Variable>
 Then match responseDataType.<jsonPath> == '<expectedType>'
-Then status <expected_status_code>
+Then status <expected_status_code> - This is used to check the response status code.
 Then response.<Json_path> = <value>
 Then match <variable1> == <variable2>
 Then match <variable1> != <variable2>
@@ -22,4 +22,3 @@ Then match response == []
 Then match response != []
 Then match response.<Json_path> != []
 Then match response time < Milliseconds
-Then status <expected_status_code>

@@ -5,7 +5,7 @@ KEYWORDS_FILE = os.getenv("CUSTOM_KEYWORDS_FILE", "keywords.txt")
 ASSERTIONS_FILE = os.getenv("CUSTOM_ASSERTIONS_FILE", "assertions.txt")
 SCENARIO_SEEDS_PATH = "Scenarios.txt"
 SEED_SAMPLE_SIZE_PER_PROMPT = 5
-MODEL = "gemini-2.0-flash"
+MODEL = "gemini-2.0-flash"  # or "gpt-4-turbo" or "gemini-1.5-pro"
 
 
 def _resolve_with_fallbacks(preferred: str, alternatives: list[str]) -> Path:
